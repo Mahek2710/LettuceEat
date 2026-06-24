@@ -1,120 +1,165 @@
-# 🍴 LettuceEat
+# LettuceEat
 
-**LettuceEat** is a modern web app for food enthusiasts to **browse trending food reels**. Think TikTok for food—users can discover delicious meals through short videos and connect with food partners who create them.
-
----
-
-## ✨ Features
-
-### Users
-- Browse food reels in a vertical scroll format  
-- Like and save favorite food videos  
-- View saved videos in a dedicated section  
-- Navigate directly to food partner profiles  
-
-### Food Partners
-- Create a business profile  
-- Upload food videos with descriptions  
-- Track engagement metrics (likes, saves)  
-- Build customer base through video content  
+A short-form video platform for food discovery and ordering. Restaurants publish reels of their dishes. Users scroll, find something they want, and order — either through the restaurant's native flow or directly in-app via Razorpay.
 
 ---
 
-## 🛠️ Tech Stack
+## The idea
 
-### Frontend
-- React 19, Vite  
-- React Router DOM, Axios  
-- CSS Modules, modern CSS (Variables, Grid, Flexbox)  
+Most food apps make you search. LettuceEat flips that — you don't know what you want until you see it.
 
-### Backend
-- Node.js, Express  
-- MongoDB with Mongoose  
-- JWT Authentication  
-- ImageKit for media storage  
-- Cookie-based sessions  
+The feed is intentionally frictionless. No categories, no filters, no homepage clutter. Just a vertical reel of dishes from restaurants near you. When something catches your eye, one tap takes you to that restaurant's full profile. From there you can browse everything they've posted, place an order, and pay — all without leaving the app.
+
+For restaurants, it's a zero-effort storefront. Upload a 30-second clip of your best dish and you're discoverable to everyone on the platform. No menu builder, no complicated setup. Your content is your listing.
 
 ---
 
-## 🚀 Getting Started
+## How ordering works
 
-### Prerequisites
-- Node.js 18+  
-- MongoDB  
-- ImageKit account  
+LettuceEat supports two ordering flows depending on what the restaurant has set up:
 
-### Installation
+**Native checkout** — restaurants that onboard with Razorpay get a full in-app ordering experience. Users add items, pay via Razorpay (UPI, cards, netbanking, wallets), and the order lands directly on the partner dashboard. The restaurant confirms, and the user gets a status update in real time.
+
+**Redirect flow** — restaurants that already have their own ordering system (website, aggregator) can link out directly from their profile. LettuceEat acts as the discovery layer; the transaction happens wherever the restaurant prefers.
+
+This makes onboarding easier for existing restaurants while keeping the door open for a fully native experience as they grow with the platform.
+
+---
+
+## Stack
+
+**Frontend** — React 19, Vite, React Router DOM, Axios, CSS custom properties with full light/dark mode
+
+**Backend** — Node.js, Express, MongoDB + Mongoose
+
+**Auth** — Separate JWT flows for users and food partners, HTTP-only cookies, protected routes on both ends
+
+**Payments** — Razorpay (order creation on server, payment verification via signature, webhook support for order status updates)
+
+**Media** — ImageKit for video upload, storage, and optimised delivery
+
+---
+
+## Running locally
+
+Prerequisites: Node 18+, MongoDB, ImageKit account, Razorpay test account
+
 ```bash
-# Clone repository
 git clone https://github.com/yourusername/lettuce-eat.git
 cd lettuce-eat
+```
 
-# Install frontend dependencies
+**Backend**
+
+```bash
+cd backend
+npm install
+```
+
+`backend/.env`:
+
+```
+JWT_SECRET=
+MONGODB_URI=mongodb://localhost:27017/lettuce-eat
+IMAGEKIT_PUBLIC_KEY=
+IMAGEKIT_PRIVATE_KEY=
+IMAGEKIT_URL_ENDPOINT=
+RAZORPAY_KEY_ID=
+RAZORPAY_KEY_SECRET=
+RAZORPAY_WEBHOOK_SECRET=
+```
+
+```bash
+node server.js
+```
+
+**Frontend**
+
+```bash
 cd frontend
 npm install
-
-# Install backend dependencies
-cd ../backend
-npm install
-
-# Create .env file in backend directory
-# Add the following:
-JWT_SECRET=your_jwt_secret
-MONGODB_URI=your_mongodb_uri
-IMAGEKIT_PUBLIC_KEY=your_imagekit_public_key
-IMAGEKIT_PRIVATE_KEY=your_imagekit_private_key
-IMAGEKIT_URL_ENDPOINT=your_imagekit_url
-
-# Start backend
 npm run dev
-
-# Start frontend
-cd ../frontend
-npm run dev
+# http://localhost:5173
+```
 
 ---
 
-## 📱 App Features in Detail
-- **Authentication**: Separate flows for users and food partners, JWT-based authentication, protected routes  
-- **Video Feed**: Infinite scroll, auto-play, like/save functionality, direct navigation to food partner profiles  
-- **Food Partner Dashboard**: Profile management, video upload with preview, business metrics, customer engagement tracking  
-- **UI/UX**: Responsive design, dark mode support, smooth animations, touch-friendly interface, accessible components  
-- **Security**: HTTP-only cookies, protected API endpoints, input validation, secure file uploads, CORS configuration  
+## API
+
+### Auth
+```
+POST   /api/auth/user/register
+POST   /api/auth/user/login
+POST   /api/auth/food-partner/register
+POST   /api/auth/food-partner/login
+```
+
+### Feed
+```
+GET    /api/food                   public feed
+POST   /api/food                   create post          food partner
+POST   /api/food/like              like / unlike         user
+POST   /api/food/save              save / unsave         user
+GET    /api/food/save              saved videos          user
+```
+
+### Orders
+```
+POST   /api/orders                 place order           user
+GET    /api/orders                 order history         user
+GET    /api/orders/incoming        incoming orders       food partner
+PATCH  /api/orders/:id/status      update status         food partner
+```
+
+### Payments
+```
+POST   /api/payments/create        create Razorpay order
+POST   /api/payments/verify        verify payment signature
+POST   /api/payments/webhook       Razorpay webhook handler
+```
+
+### Profiles
+```
+GET    /api/food-partner/:id       restaurant profile + posts
+```
 
 ---
 
-## 🔄 API Endpoints
+## Project structure
 
-### Authentication
-- `POST /api/auth/user/register` – Register new user  
-- `POST /api/auth/user/login` – User login  
-- `POST /api/auth/food-partner/register` – Register food partner  
-- `POST /api/auth/food-partner/login` – Food partner login  
-
-### Food
-- `POST /api/food` – Create new food post  
-- `GET /api/food` – Get food feed  
-- `POST /api/food/like` – Like/unlike food  
-- `POST /api/food/save` – Save/unsave food  
-- `GET /api/food/save` – Get saved foods  
-
-### Food Partner
-- `GET /api/food-partner/:id` – Get food partner profile  
-
----
-
-## 🤝 Contributing
-Contributions are welcome! Fork the repo, create a branch, and submit a pull request.
-
----
-
-## 📝 License
-MIT License – see LICENSE file for details.
+```
+lettuce-eat/
+├── backend/
+│   ├── src/
+│   │   ├── controllers/
+│   │   ├── middlewares/
+│   │   ├── models/
+│   │   ├── routes/
+│   │   └── services/
+│   │       ├── storage.services.js
+│   │       └── payment.services.js
+│   └── server.js
+└── frontend/
+    └── src/
+        ├── components/
+        ├── pages/
+        │   ├── auth/
+        │   ├── food-partner/
+        │   └── general/
+        └── styles/
+```
 
 ---
 
-## 🙏 Acknowledgements
-- Vite  
-- React  
-- MongoDB  
-- ImageKit
+## Roadmap
+
+- [ ] Real-time order status via WebSockets
+- [ ] Location-based feed filtering
+- [ ] Restaurant analytics dashboard
+- [ ] Push notifications for order updates
+
+---
+
+## License
+
+MIT
